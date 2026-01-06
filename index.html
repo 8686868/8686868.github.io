@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ENGO551 MQTT IoT GeoWeb App</title>
+
+    <!-- Leaflet -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+
+    <!-- Paho js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"type="text/javascript"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>ENGO551 – IoT MQTT GeoWeb App</h1>
+
+<div id="controls">
+    <input id="host" placeholder="Broker host" value="test.mosquitto.org">
+    <input id="port" placeholder="Port" value="8081">
+    <input id="topic" placeholder="Topic"
+           value="ENGO551/Your_Name/my_temperature">
+
+    <br><br>
+
+    <button id="startBtn">Start</button>
+    <button id="endBtn" disabled>End</button>
+    <button id="shareBtn" disabled>Share My Status</button>
+
+    <p id="status"></p>
+</div>
+
+<div id="map"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script src="script.js"></script>
+
+</body>
+</html>

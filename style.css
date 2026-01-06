@@ -1,0 +1,37 @@
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+}
+
+h1 {
+    text-align: center;
+    margin: 10px 0;
+}
+
+#controls {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+#controls input {
+    width: 200px;
+    margin: 3px;
+}
+
+#controls button {
+    margin: 5px;
+    padding: 8px 12px;
+}
+
+#status {
+    font-weight: bold;
+}
+
+#map {
+    height: 600px;
+    width: 100%;
+}
