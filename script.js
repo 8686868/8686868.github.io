@@ -7,23 +7,10 @@ document.addEventListener('DOMContentLoaded', function() { //only run the script
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-
-
-
-
-
-
-
-
-
-
     let marker = null;
 
     var mqtt = null;
-    //let connected = false;
-
-
-
+    var connected_flag = 0;
 
     // UI elements
     const statusEl = document.getElementById("status");
@@ -31,6 +18,10 @@ document.addEventListener('DOMContentLoaded', function() { //only run the script
     const endBtn = document.getElementById("endBtn");
     const shareBtn = document.getElementById("shareBtn");
 
+    document.querySelector("#startBtn").onclick = function() {
+        MQTTconnect();
+
+    }
 
 
 
@@ -42,11 +33,8 @@ document.addEventListener('DOMContentLoaded', function() { //only run the script
 
 
 
-
-
-
-    // ---------- CONNECT ----------
-    startBtn.onclick = () => {
+    
+    function MQTTconnect() {
         const host = document.getElementById("host").value;
         const port = Number(document.getElementById("port").value);
         const topic = document.getElementById("topic").value;
@@ -69,16 +57,11 @@ document.addEventListener('DOMContentLoaded', function() { //only run the script
         mqtt.connect(options);
     };
 
-
-
-
-
-
-    // ---------- ON CONNECT ----------
     function onConnect(topic) {
-        connected = true;
-        statusEl.textContent = "Connected";
-        client.subscribe(topic);
+        connected_flag=1;
+        document.getElementById("status").innerHTML="Connected";
+
+        mqtt.subscribe(topic);///////////////////////////////////////////////////////////////////////////??????????
 
         startBtn.disabled = true;
         endBtn.disabled = false;
@@ -91,11 +74,11 @@ document.addEventListener('DOMContentLoaded', function() { //only run the script
 
     // ---------- DISCONNECT ----------
     endBtn.onclick = () => {
-        if (client && connected) {
-            client.disconnect();
+        if (mqtt && connected_flag) {
+            mqtt.disconnect();
         }
 
-        connected = false;
+        connected_flag = false;
         statusEl.textContent = "Disconnected";
 
         startBtn.disabled = false;
@@ -107,12 +90,26 @@ document.addEventListener('DOMContentLoaded', function() { //only run the script
         document.getElementById("topic").disabled = false;
     };
 
-    // ---------- AUTO RECONNECT ----------
+    //after lost connection try to connect again
     function onConnectionLost() {
-        statusEl.textContent = "Connection lost – reconnecting...";
-        connected = false;
-        setTimeout(() => startBtn.click(), 3000);
+        document.getElementById("status").innerHTML = "Connection Lost";
+        connected_flag=0;
+        setTimeout(MQTTconnect, 3000);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // ---------- SHARE MY STATUS ----------
     shareBtn.onclick = () => {
@@ -140,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function() { //only run the script
 
             const msg = new Paho.MQTT.Message(JSON.stringify(geojson));
             msg.destinationName = document.getElementById("topic").value;
-            client.send(msg);
+            mqtt.send(msg);
         });
     };
 
@@ -190,4 +187,3 @@ document.addEventListener('DOMContentLoaded', function() { //only run the script
         map.setView([lat, lng], 15);
     }
 });
-
