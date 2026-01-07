@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function() { //only run the script
     //Creating map
     var map = L.map('map').setView([51.04, -114.07], 10);
 
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
@@ -190,3 +190,4 @@ document.addEventListener('DOMContentLoaded', function() { //only run the script
         map.setView([lat, lng], 15);
     }
 });
+
