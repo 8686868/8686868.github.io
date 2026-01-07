@@ -12,8 +12,6 @@ document.addEventListener('DOMContentLoaded', function() { //only run the script
     var mqtt = null;
     var connected_flag = 0;
 
-    // UI elements
-    const statusEl = document.getElementById("status");
     const startBtn = document.getElementById("startBtn");
     const endBtn = document.getElementById("endBtn");
     const shareBtn = document.getElementById("shareBtn");
@@ -22,17 +20,6 @@ document.addEventListener('DOMContentLoaded', function() { //only run the script
         MQTTconnect();
 
     }
-
-
-
-
-
-
-
-
-
-
-
     
     function MQTTconnect() {
         const host = document.getElementById("host").value;
@@ -48,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function() { //only run the script
             timeout: 4000,
             useSSL: true,
             onSuccess: function() { onConnect(topic) },
-            onFailure: function() { statusEl.textContent = "Connection failed" },
+            onFailure: function() { document.getElementById("status").innerHTML = "Connection failed" },
         }
 
         mqtt.onConnectionLost = onConnectionLost;
@@ -79,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function() { //only run the script
         }
 
         connected_flag = false;
-        statusEl.textContent = "Disconnected";
+        document.getElementById("status").innerHTM = "Disconnected";
 
         startBtn.disabled = false;
         endBtn.disabled = true;
