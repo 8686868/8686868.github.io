@@ -12,15 +12,78 @@ document.addEventListener('DOMContentLoaded', function() { //only run the script
     var mqtt = null;
     var connected_flag = 0;
 
-    const startBtn = document.getElementById("startBtn");
-    const endBtn = document.getElementById("endBtn");
-    const shareBtn = document.getElementById("shareBtn");
-
-    document.querySelector("#startBtn").onclick = function() {
+    document.querySelector("#start").onclick = function() {
         MQTTconnect();
+    }
 
+    document.querySelector("#end").onclick = function() {
+        
+        if (connected_flag==1) {
+            mqtt.disconnect();
+
+            connected_flag = 0;
+            document.getElementById("status").innerHTM = "Disconnected";
+
+            document.querySelector("#start").disabled = false;
+            document.querySelector("#end").disabled = true;
+            document.querySelector("#share").disabled = true;
+        }
+    }
+
+    document.querySelector("#share").onclick = function() {
+        MQTTshareInfo();
     }
     
+    //after lost connection try to connect again
+    function onConnectionLost() {
+        document.getElementById("status").innerHTML = "Connection Lost";
+        connected_flag=0;
+        setTimeout(MQTTconnect, 3000);
+    }
+
+    //receiving mqtt messages
+    function onMessageArrived(r_message) {
+        
+        const data = JSON.parse(r_message.payloadString);
+        const [lon, lat] = data.geometry.coordinates;
+        const temp = data.properties.temperature;
+
+        //determining colour of marker based on temp
+        var colour = "";
+
+        if (temp >= -40 && temp < 10) {
+            colour="blue";
+        }
+
+        if (temp >= 10 && temp < 30) {
+            colour="green";
+        }
+
+        if (temp >= 30 && temp <= 60) {
+            colour="red";
+        }
+
+        //removing marker if already on map
+        if (marker) {
+            map.removeLayer(marker);
+        }
+
+        //creating new marker with temp popup
+        marker = L.circleMarker([lat, lon], {color: colour, fillColor: colour}).bindPopup(`Temperature: ${temp} °C`);
+        marker.addTo(map);
+    }
+
+    function onConnect(topic) {
+        connected_flag=1;
+        document.getElementById("status").innerHTML="Connected";
+
+        mqtt.subscribe(topic);
+
+        document.querySelector("#start").disabled = true;
+        document.querySelector("#end").disabled = false;
+        document.querySelector("#share").disabled = false;
+    }
+
     function MQTTconnect() {
         const host = document.getElementById("host").value;
         const port = Number(document.getElementById("port").value);
@@ -35,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function() { //only run the script
             timeout: 4000,
             useSSL: true,
             onSuccess: function() { onConnect(topic) },
-            onFailure: function() { document.getElementById("status").innerHTML = "Connection failed" },
+            onFailure: function() { document.getElementById("status").innerHTML = "Connection Failed" },
         }
 
         mqtt.onConnectionLost = onConnectionLost;
@@ -44,133 +107,32 @@ document.addEventListener('DOMContentLoaded', function() { //only run the script
         mqtt.connect(options);
     };
 
-    function onConnect(topic) {
-        connected_flag=1;
-        document.getElementById("status").innerHTML="Connected";
+    function MQTTshareInfo() {
 
-        mqtt.subscribe(topic);///////////////////////////////////////////////////////////////////////////??????????
+        //using geolocation to get currect position
+        navigator.geolocation.getCurrentPosition(function(position) {
 
-        startBtn.disabled = true;
-        endBtn.disabled = false;
-        shareBtn.disabled = false;
+            const lat = showPosition.coords.latitude;
+            const lon = showPosition.coords.longitude;            
 
-        document.getElementById("host").disabled = true;
-        document.getElementById("port").disabled = true;
-        document.getElementById("topic").disabled = true;
-    }
-
-    // ---------- DISCONNECT ----------
-    endBtn.onclick = () => {
-        if (mqtt && connected_flag) {
-            mqtt.disconnect();
-        }
-
-        connected_flag = false;
-        document.getElementById("status").innerHTM = "Disconnected";
-
-        startBtn.disabled = false;
-        endBtn.disabled = true;
-        shareBtn.disabled = true;
-
-        document.getElementById("host").disabled = false;
-        document.getElementById("port").disabled = false;
-        document.getElementById("topic").disabled = false;
-    };
-
-    //after lost connection try to connect again
-    function onConnectionLost() {
-        document.getElementById("status").innerHTML = "Connection Lost";
-        connected_flag=0;
-        setTimeout(MQTTconnect, 3000);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // ---------- SHARE MY STATUS ----------
-    shareBtn.onclick = () => {
-        if (!navigator.geolocation) {
-            alert("Geolocation not supported");
-            return;
-        }
-
-        navigator.geolocation.getCurrentPosition(pos => {
-            const lat = pos.coords.latitude;
-            const lng = pos.coords.longitude;
             const temp = Math.floor(Math.random() * 100) - 40;
 
+            //using standard geojson format
             const geojson = {
                 type: "Feature",
                 geometry: {
                     type: "Point",
-                    coordinates: [lng, lat]
+                    coordinates: [lon, lat]
                 },
                 properties: {
-                    temperature: temp,
-                    timestamp: new Date().toISOString()
+                    temperature: temp
                 }
             };
 
-            const msg = new Paho.MQTT.Message(JSON.stringify(geojson));
-            msg.destinationName = document.getElementById("topic").value;
-            mqtt.send(msg);
+            const r_message = new Paho.MQTT.Message(JSON.stringify(geojson));
+            r_message.destinationName = document.getElementById("topic").value;
+            mqtt.send(r_message);
+
         });
     };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // ---------- RECEIVE MQTT ----------
-    function onMessageArrived(message) {
-        const data = JSON.parse(message.payloadString);
-        const [lng, lat] = data.geometry.coordinates;
-        const temp = data.properties.temperature;
-
-        let color = "blue";
-        if (temp >= 10 && temp < 30) color = "green";
-        if (temp >= 30) color = "red";
-
-        if (marker) map.removeLayer(marker);
-
-        marker = L.circleMarker([lat, lng], {
-            radius: 10,
-            color: color,
-            fillColor: color,
-            fillOpacity: 0.8
-        }).addTo(map);
-
-        marker.bindPopup(`Temperature: ${temp} °C`);
-        map.setView([lat, lng], 15);
-    }
 });
